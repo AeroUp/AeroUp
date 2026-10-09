@@ -36,13 +36,23 @@ your ai hits its usage limit, another one takes the baton, and the first wakes b
 <tr>
 <td width="50%" valign="top">
 
+<a href="https://github.com/AeroUp/Visor"><img src="https://raw.githubusercontent.com/AeroUp/Visor/main/assets/logo.png" width="56" align="right" alt="Visor logo"></a>
+
+**[visor](https://github.com/AeroUp/Visor)**<br>
+in-game overlay for roblox: server browser, server hop, badges and multi-account, one hotkey away.
+
+</td>
+<td width="50%" valign="top">
+
 <a href="https://github.com/AeroUp/RdpControl"><img src="https://raw.githubusercontent.com/AeroUp/RdpControl/main/assets/logo.svg" width="56" align="right" alt="RdpControl logo"></a>
 
 **[rdpcontrol](https://github.com/AeroUp/RdpControl)**<br>
 check on your game macro from discord: screenshots, crash and frozen-screen alerts, remote keys.
 
 </td>
-<td width="50%" valign="top">
+</tr>
+<tr>
+<td colspan="2" valign="top">
 
 **[useful-roblox-apis](https://github.com/AeroUp/Useful-roblox-apis)**<br>
 the roblox web endpoints you actually need, in one place.
