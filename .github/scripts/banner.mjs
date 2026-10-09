@@ -1,0 +1,115 @@
+// Generates assets/banner.svg: a dark terminal window with ASCII-art "aero" and a
+// "→ building <newest public repo>" line. Run by .github/workflows/banner.yml.
+//   node .github/scripts/banner.mjs               (looks up your newest public repo)
+//   node .github/scripts/banner.mjs --repo name   (use a specific name)
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const USER = 'AeroUp';
+const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
+const OUT = path.join(ROOT, 'assets', 'banner.svg');
+const SKIP = new Set([USER.toLowerCase()]); // the profile repo itself
+
+// "aero" in the ANSI Shadow figlet font.
+const ART = [
+  ' █████╗ ███████╗██████╗  ██████╗ ',
+  '██╔══██╗██╔════╝██╔══██╗██╔═══██╗',
+  '███████║█████╗  ██████╔╝██║   ██║',
+  '██╔══██║██╔══╝  ██╔══██╗██║   ██║',
+  '██║  ██║███████╗██║  ██║╚██████╔╝',
+  '╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ',
+];
+
+async function newestRepo() {
+  const arg = process.argv.indexOf('--repo');
+  if (arg > 0 && process.argv[arg + 1]) return process.argv[arg + 1];
+  const headers = { accept: 'application/vnd.github+json', 'user-agent': `${USER}-banner` };
+  if (process.env.GITHUB_TOKEN) headers.authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
+  const res = await fetch(`https://api.github.com/users/${USER}/repos?type=owner&sort=created&direction=desc&per_page=30`, { headers });
+  if (!res.ok) throw new Error(`GitHub API ${res.status}`);
+  const repo = (await res.json()).find((r) => !r.fork && !r.archived && !r.private && !SKIP.has(r.name.toLowerCase()));
+  return repo?.name || null;
+}
+
+const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+// Solid blocks get the bright gradient, box-drawing "shadow" characters a darker purple.
+function artLine(line) {
+  return line.replace(/(█+)|([^█]+)/g, (m, solid) => (solid ? `<tspan class="b">${m}</tspan>` : `<tspan class="s">${esc(m)}</tspan>`));
+}
+
+function svg(building) {
+  const W = 1200;
+  const H = 352;
+  const x = 60;
+  const artTop = 130;
+  const lh = 27; // ASCII line height
+  const right = 560; // tagline column
+  const typed = `→ building ${building}`;
+  const mono = "ui-monospace, 'Cascadia Mono', 'JetBrains Mono', SFMono-Regular, Consolas, 'DejaVu Sans Mono', Menlo, monospace";
+  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-label="aero: backend, discord bots, ai tools. building ${esc(building)}">
+  <title>aero</title>
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#e9d5ff"/>
+      <stop offset="0.5" stop-color="#c084fc"/>
+      <stop offset="1" stop-color="#9333ea"/>
+    </linearGradient>
+    <filter id="glow" x="-5%" y="-20%" width="110%" height="140%">
+      <feGaussianBlur stdDeviation="5" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <pattern id="scan" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="1" fill="#ffffff" opacity="0.025"/>
+    </pattern>
+    <style>
+      text { font-family: ${mono}; white-space: pre; }
+      .b { fill: url(#g); }
+      .s { fill: #5b3a8c; }
+      .cursor { animation: blink 1.1s steps(1) infinite; }
+      @keyframes blink { 50% { opacity: 0; } }
+      .type { animation: type 2.6s steps(${typed.length}) 0.6s both; }
+      @keyframes type { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+    </style>
+  </defs>
+
+  <rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="16" fill="#0b0a12" stroke="#2b2540" stroke-width="2"/>
+  <rect x="1" y="1" width="${W - 2}" height="${H - 2}" rx="16" fill="url(#scan)"/>
+  <path d="M1 44 H${W - 1}" stroke="#1d1a2b" stroke-width="2"/>
+  <circle cx="30" cy="23" r="6.5" fill="#3b3452"/>
+  <circle cx="52" cy="23" r="6.5" fill="#3b3452"/>
+  <circle cx="74" cy="23" r="6.5" fill="#a855f7"/>
+  <text x="${W / 2}" y="28" text-anchor="middle" font-size="14" fill="#6f6889">aero@github: ~</text>
+
+  <text x="${x}" y="78" font-size="20"><tspan fill="#c084fc">~/aero</tspan><tspan fill="#8b85a3"> $ </tspan><tspan fill="#e9e6f5">whoami</tspan></text>
+
+  <g filter="url(#glow)" font-size="22">
+${ART.map((line, i) => `    <text x="${x}" y="${artTop + i * lh}" xml:space="preserve">${artLine(line)}</text>`).join('\n')}
+  </g>
+
+  <text x="${right}" y="${artTop + 2 * lh + 4}" font-size="26" fill="#e9e6f5">backend <tspan fill="#a855f7">·</tspan> discord bots <tspan fill="#a855f7">·</tspan> ai tools</text>
+  <text class="type" x="${right}" y="${artTop + 3 * lh + 14}" font-size="19" fill="#8b85a3" xml:space="preserve"><tspan fill="#a855f7">→</tspan>${esc(typed.slice(1))}</text>
+
+  <text x="${x}" y="${H - 30}" font-size="20"><tspan fill="#c084fc">~/aero</tspan><tspan fill="#8b85a3"> $ </tspan><tspan class="cursor" fill="#e9e6f5">█</tspan></text>
+</svg>
+`;
+}
+
+let building;
+try {
+  building = (await newestRepo())?.toLowerCase();
+} catch (e) {
+  console.warn(`couldn't look up repos (${e.message}); keeping the current line`);
+  const current = fs.existsSync(OUT) && fs.readFileSync(OUT, 'utf8').match(/building ([^".<]+)/);
+  building = current ? current[1].trim() : null;
+}
+building = building || 'something new';
+const next = svg(building);
+if (fs.existsSync(OUT) && fs.readFileSync(OUT, 'utf8') === next) {
+  console.log(`banner unchanged (building ${building})`);
+} else {
+  fs.mkdirSync(path.dirname(OUT), { recursive: true });
+  fs.writeFileSync(OUT, next);
+  console.log(`banner updated: building ${building}`);
+}

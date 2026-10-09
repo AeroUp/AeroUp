@@ -36,8 +36,10 @@ your ai hits its usage limit, another one takes the baton, and the first wakes b
 <tr>
 <td width="50%" valign="top">
 
+<a href="https://github.com/AeroUp/RdpControl"><img src="https://raw.githubusercontent.com/AeroUp/RdpControl/main/assets/logo.svg" width="56" align="right" alt="RdpControl logo"></a>
+
 **[rdpcontrol](https://github.com/AeroUp/RdpControl)**<br>
-discord bot to check on your game macro from anywhere: `/ss` grabs a screenshot, `/stop` kills it.
+check on your game macro from discord: screenshots, crash and frozen-screen alerts, remote keys.
 
 </td>
 <td width="50%" valign="top">
