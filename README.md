@@ -4,7 +4,7 @@
 
 ### ~/about
 
-i make discord bots, backend stuff and ai tools. building <!-- recent -->[tag-team](https://github.com/AeroUp/Tag-Team) + [relay](https://github.com/AeroUp/Relay)<!-- /recent --> rn.
+i make discord bots, backend stuff and ai tools. building <!-- recent -->[visor](https://github.com/AeroUp/Visor) + [tag-team](https://github.com/AeroUp/Tag-Team)<!-- /recent --> rn.
 
 discord: `@aerotechy.`
 
