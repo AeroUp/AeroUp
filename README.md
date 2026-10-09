@@ -51,14 +51,6 @@ check on your game macro from discord: screenshots, crash and frozen-screen aler
 
 </td>
 </tr>
-<tr>
-<td colspan="2" valign="top">
-
-**[useful-roblox-apis](https://github.com/AeroUp/Useful-roblox-apis)**<br>
-the roblox web endpoints you actually need, in one place.
-
-</td>
-</tr>
 </table>
 
 ### ~/activity
