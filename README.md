@@ -10,7 +10,7 @@ discord: `@aerotechy.`
 
 ### ~/stack
 
-<img src="https://skillicons.dev/icons?i=py,js,nodejs,lua,discord,git,github,vscode,windows&theme=dark" alt="python, javascript, node.js, lua, discord, git, github, vs code, windows" />
+<img src="https://skillicons.dev/icons?i=py,js,ts,nodejs,lua,git,github&theme=dark" alt="python, javascript, typescript, node.js, lua, git, github" />
 
 ### ~/projects
 
