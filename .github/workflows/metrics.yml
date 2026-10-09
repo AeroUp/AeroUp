@@ -10,13 +10,13 @@ jobs:
     steps:
       - uses: lowlighter/metrics@latest
         with:
-          user: AerotechXD
+          user: AeroUp
           token: ${{ secrets.GITHUB_TOKEN }}
           template: classic
           plugin_isocalendar: yes
           plugin_isocalendar_duration: full-year
           plugin_languages: yes
-          plugin_languages_ignored: javascript,html,css
+          plugin_languages_ignored: html,css
           plugin_languages_indepth: yes
           plugin_languages_sections: most-used
           plugin_lines: yes
