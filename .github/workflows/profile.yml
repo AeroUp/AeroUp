@@ -1,12 +1,12 @@
-name: Banner
+name: Profile
 
-# Keeps the "→ building …" line in assets/banner.svg pointed at the newest public repo.
+# Points the banner's "→ building …" line and the about section at your newest public repos.
 on:
   schedule: [{ cron: "17 */3 * * *" }] # every 3 hours
   workflow_dispatch:
   push:
     branches: [main]
-    paths: [".github/scripts/banner.mjs", ".github/workflows/banner.yml"]
+    paths: [".github/scripts/update-profile.mjs", ".github/workflows/profile.yml"]
 
 permissions:
   contents: write
@@ -16,23 +16,23 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  banner:
+  update:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Regenerate banner
-        run: node .github/scripts/banner.mjs
+      - name: Update banner and about
+        run: node .github/scripts/update-profile.mjs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Commit if it changed
+      - name: Commit if anything changed
         run: |
-          if git diff --quiet -- assets/banner.svg; then echo "no change"; exit 0; fi
+          if git diff --quiet -- assets/banner.svg README.md; then echo "no change"; exit 0; fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add assets/banner.svg
-          git commit -m "Update banner: newest repo [skip ci]"
+          git add assets/banner.svg README.md
+          git commit -m "Update profile: newest repos [skip ci]"
           git pull --rebase
           git push

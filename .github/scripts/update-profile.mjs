@@ -1,7 +1,8 @@
-// Generates assets/banner.svg: a dark terminal window with ASCII-art "aero" and a
-// "→ building <newest public repo>" line. Run by .github/workflows/banner.yml.
-//   node .github/scripts/banner.mjs               (looks up your newest public repo)
-//   node .github/scripts/banner.mjs --repo name   (use a specific name)
+// Keeps the profile pointed at your newest public repos. Run by .github/workflows/profile.yml.
+//  - assets/banner.svg: terminal banner with ASCII-art "aero" and "→ building <newest repo>"
+//  - README.md: the text between <!-- recent --> and <!-- /recent --> becomes your two newest repos
+//   node .github/scripts/update-profile.mjs                  (looks your repos up)
+//   node .github/scripts/update-profile.mjs --repos a,b      (use specific names)
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -9,6 +10,7 @@ import { fileURLToPath } from 'node:url';
 const USER = 'AeroUp';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const OUT = path.join(ROOT, 'assets', 'banner.svg');
+const README = path.join(ROOT, 'README.md');
 const SKIP = new Set([USER.toLowerCase()]); // the profile repo itself
 
 // "aero" in the ANSI Shadow figlet font.
@@ -21,15 +23,15 @@ const ART = [
   '╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ',
 ];
 
-async function newestRepo() {
-  const arg = process.argv.indexOf('--repo');
-  if (arg > 0 && process.argv[arg + 1]) return process.argv[arg + 1];
-  const headers = { accept: 'application/vnd.github+json', 'user-agent': `${USER}-banner` };
+// Your public repos, newest first (no forks, no archived, not the profile repo).
+async function newestRepos() {
+  const arg = process.argv.indexOf('--repos');
+  if (arg > 0 && process.argv[arg + 1]) return process.argv[arg + 1].split(',').map((name) => ({ name, html_url: `https://github.com/${USER}/${name}` }));
+  const headers = { accept: 'application/vnd.github+json', 'user-agent': `${USER}-profile` };
   if (process.env.GITHUB_TOKEN) headers.authorization = `Bearer ${process.env.GITHUB_TOKEN}`;
   const res = await fetch(`https://api.github.com/users/${USER}/repos?type=owner&sort=created&direction=desc&per_page=30`, { headers });
   if (!res.ok) throw new Error(`GitHub API ${res.status}`);
-  const repo = (await res.json()).find((r) => !r.fork && !r.archived && !r.private && !SKIP.has(r.name.toLowerCase()));
-  return repo?.name || null;
+  return (await res.json()).filter((r) => !r.fork && !r.archived && !r.private && !SKIP.has(r.name.toLowerCase()));
 }
 
 const esc = (s) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -96,20 +98,34 @@ ${ART.map((line, i) => `    <text x="${x}" y="${artTop + i * lh}" xml:space="pre
 `;
 }
 
-let building;
-try {
-  building = (await newestRepo())?.toLowerCase();
-} catch (e) {
-  console.warn(`couldn't look up repos (${e.message}); keeping the current line`);
-  const current = fs.existsSync(OUT) && fs.readFileSync(OUT, 'utf8').match(/building ([^".<]+)/);
-  building = current ? current[1].trim() : null;
+function writeIfChanged(file, content, label) {
+  if (fs.existsSync(file) && fs.readFileSync(file, 'utf8') === content) return console.log(`${label}: unchanged`);
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  fs.writeFileSync(file, content);
+  console.log(`${label}: updated`);
 }
-building = building || 'something new';
-const next = svg(building);
-if (fs.existsSync(OUT) && fs.readFileSync(OUT, 'utf8') === next) {
-  console.log(`banner unchanged (building ${building})`);
+
+let repos;
+try {
+  repos = await newestRepos();
+} catch (e) {
+  console.warn(`couldn't look up repos (${e.message}); leaving the profile as it is`);
+  process.exit(0);
+}
+if (!repos.length) {
+  console.log('no public repos yet; nothing to update');
+  process.exit(0);
+}
+
+// Banner: the newest repo.
+const building = repos[0].name.toLowerCase();
+writeIfChanged(OUT, svg(building), `banner (building ${building})`);
+
+// README: the two newest repos, between <!-- recent --> and <!-- /recent -->.
+const recent = repos.slice(0, 2).map((r) => `[${r.name.toLowerCase()}](${r.html_url})`).join(' + ');
+const readme = fs.readFileSync(README, 'utf8');
+if (/<!-- recent -->[\s\S]*?<!-- \/recent -->/.test(readme)) {
+  writeIfChanged(README, readme.replace(/<!-- recent -->[\s\S]*?<!-- \/recent -->/, `<!-- recent -->${recent}<!-- /recent -->`), `README (${recent})`);
 } else {
-  fs.mkdirSync(path.dirname(OUT), { recursive: true });
-  fs.writeFileSync(OUT, next);
-  console.log(`banner updated: building ${building}`);
+  console.log('README has no <!-- recent --> markers; skipped');
 }
