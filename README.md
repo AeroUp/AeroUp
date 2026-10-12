@@ -6,7 +6,7 @@
 
 i make discord bots, backend stuff and ai tools. building <!-- recent -->[visor](https://github.com/AeroUp/Visor) + [tag-team](https://github.com/AeroUp/Tag-Team)<!-- /recent --> rn.
 
-discord: `@aerotechy.`
+discord: `@aerotechyy`
 
 ### ~/stack
 
